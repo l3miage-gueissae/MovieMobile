@@ -1,0 +1,1 @@
+export type loading<T>  = {loading:boolean, data: T }
