@@ -3,7 +3,8 @@ export const APItoken = '3bbc79e4d8b6b486a77f1b2e36797ff8'
 export const APIbackroundImage = 'https://image.tmdb.org/t/p'
 
 
-export let APPlanguage: 'fr' | 'en' = 'fr'
+export let APPlanguage: 'fr-FR' | 'en' = 'fr-FR'
+export let LocationUser: 'FR' | 'EN' = 'FR'
 
 
 

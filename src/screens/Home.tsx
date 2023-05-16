@@ -4,14 +4,13 @@ import { Dimensions } from 'react-native';
 import LinearSelect from '../components/actions/LinearSelect';
 import HeaderMenu from '../components/HeaderMenu';
 import ScreenSplit from '../components/ScreenSplit';
-import ShowComponent from '../components/ShowComponent';
-import { ShowDiscovery } from '../services/Discovery/discovery.service';
+import ShowComponent from '../components/View/ShowComponent';
+import { ShowDiscovery ,MovieTrend} from '../services/Discovery/discovery.service';
 import { paramDiscovery } from '../services/Discovery/model/discovery.model';
 import { getAllGenre } from '../services/Genre/genre.service';
 import { genre } from '../services/Genre/model/genre.model';
 import { APIbackroundImage } from '../services/GlobalVariable';
 import { media_type } from '../services/Movie/model/trending.model';
-import { MovieTrend } from '../services/Movie/MovieService';
 
 type data<T> = { loading: boolean, data: T }
 type dataHome = {

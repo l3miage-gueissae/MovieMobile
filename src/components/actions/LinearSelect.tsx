@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, FlatList, Text } from 'react-native'
 import { Button } from 'react-native-paper'
-import { darkGray } from '../../css/ThemeColor'
+import { darkGray, GlovalStyle } from '../../css/ThemeColor'
 
 type buttonData = { id: number, name: string }
 
 
-type props = {genres:buttonData[],selected: (selection:number[]) => void }
+type props = {genres:buttonData[],selected: (selection:number[]) => void , disabled?:true}
 
 const LinearSelect = (props:props) => {
     const [selected, setSelected] : [number[],any] = useState([])
@@ -24,7 +24,9 @@ const LinearSelect = (props:props) => {
 
         const isSelect = selected.includes(item.id)
         return (
-            <Button mode="contained-tonal" onPress={() => isSelect ? setSelected(selected.filter((i) => i !== item.id )) : setSelected([...selected, item.id])} style={styles.button} buttonColor={isSelect ? '#fff' : darkGray} textColor={!isSelect ? '#fff' : darkGray}>
+            <Button mode="contained-tonal" onPress={() => props.disabled ? undefined : isSelect ? setSelected(selected.filter((i) => i !== item.id )) : setSelected([...selected, item.id])} style={[ GlovalStyle.rounded ,styles.button]} buttonColor={isSelect ? '#fff' : darkGray} textColor={!isSelect ? '#fff' : darkGray} 
+            
+            >
                 {item.name}
             </Button>
         )
@@ -46,7 +48,6 @@ const LinearSelect = (props:props) => {
 
 const styles = StyleSheet.create({
     button: {
-        borderRadius:5,
         marginRight:5
     }
 })

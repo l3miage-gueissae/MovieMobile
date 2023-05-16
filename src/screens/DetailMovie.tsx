@@ -1,94 +1,219 @@
-import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, Text  } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { StyleSheet, View, Image, FlatList } from 'react-native'
 import HeaderMenu from '../components/HeaderMenu';
 import ScreenSplit from '../components/ScreenSplit';
-import { genre } from '../services/Genre/model/genre.model';
-import { media_type } from '../services/Movie/model/trending.model';
+import type { genre } from '../services/Genre/model/genre.model';
 import CarouselTemplate from '../components/actions/CarouselTemplate';
 import { Movie } from '../services/Movie/model/movie.model';
+import { GetAllMovieAffiche, GetMovieCredit, GetMovieDetail, GetMovieProvider, GetMovieVideos } from '../services/Movie/MovieService';
+import { APIbackroundImage } from '../services/GlobalVariable';
+import { Button, IconButton, Text } from 'react-native-paper';
+import GestureRecognizer from 'react-native-swipe-gestures';
+import LinearSelect from '../components/actions/LinearSelect';
+import { darkGray, GlovalStyle, primary, red, white } from '../css/ThemeColor';
+import YoutubeIframe from 'react-native-youtube-iframe';
+import SkeletonLoader from '../components/loader/skeleton';
+import ShowProvider from '../components/View/ShowProvider';
+import ShowComponent from '../components/View/ShowComponent';
 
 type data<T> = { loading: boolean, data: T }
-type dataHome = {
-    trend: data<any>,
-    genre: data<genre[]>,
-
-}
-type dataName = 'trend'
-
-const content: { title: string, dataName: dataName }[] = [
-    { title: 'Tendance', dataName: 'trend' }
-]
 
 
 
-// content display in the top of the component, will disepear in scrolling
-const TopContent = (setAffiche: any, data: any) => {
-    setAffiche({
-        loading: false,
-        data: (
-            <View >
-                <CarouselTemplate data={[1,2,3]} renderItem={renderItem}/>
-                {/* <Image style={{ width: "100%", height: "100%" }} source={{ uri: `${APIbackroundImage}/w500${data.backdrop_path}` }} />
-                <View style={styles.absolutePosition}>
-                    <View style={styles.contextOnImage}>
-                        <Text style={styles.afficheTitle}>{data.title ? data.title : data.name}</Text>
-                    </View>
-                </View> */}
-            </View>
-        )
-    })
-}
 
 
-
-const renderItem = ({ item, index }: any) => {
+const renderAffiche = ({ item, index }: any) => {
     return (
-        <View style={{ backgroundColor: 'orange', height: '100%' }}>
-            <Text>tot {index}</Text>
-        </View>
+        <Image style={{ width: "100%", height: "100%" }} source={{ uri: `${APIbackroundImage}/w1280${item.file_path}` }} />
     );
 }
 
 
-type props = {id:number}
-const DetailMovie = (navigation:any) => {
 
-    const [menu, setMenu] = useState('affiche' as media_type)
-    const [affiche, setAffiche] = useState({loading:true,data:[{},{},{}]})
-    const [mainContentView, setMainContentView] :[any,any] = useState()
-    const props : props = navigation.route.params
-    const [dataMovie, setdataMovie] :[Movie,any] = useState({
-        id:props.id,
-        category:{loading:true,data:[]},
-        description:'',
-        imagesPath:{loading:true,data:['','','']},
-        videos:{loading:true,data:[{},{},{}]},
-        opinions:{loading:true,data:[]},
-        people:{loading:true,data:[{},{},{}]},
-        provider:{loading:true,data:[{},{},{}]},
-        recomendation:{loading:true,data:[{},{},{}]},
-        similarity:{loading:true,data:[{},{},{}]},
-    })
 
+
+type props = { id: number }
+const DetailMovie = (navigation: any) => {
+    let [menuOptions, setMenuOptions]: [{ value: string, label: string }[], any] = useState([])
+    const [menu, setMenu] = useState('affiche')
+    const [affiche, setAffiche] = useState({ loading: true, data: <View></View> })
+    const [mainContentView, setMainContentView]: [any, any] = useState()
+    const props: props = navigation.route.params
+    const [dataMovie, setdataMovie] = useState<Movie>({
+        id: props.id,
+        category: { loading: true, data: [] as genre[] },
+        title: '',
+        description: '',
+        imagesPath: { loading: true, data: ['', '', ''] },
+        videos: { loading: true, data: [] },
+        opinions: { loading: true, data: [] },
+        credits: { loading: true, data: [{}, {}, {}] },
+        provider: { loading: true, data: [{}, {}, {}] },
+        recomendation: { loading: true, data: [{}, {}, {}] },
+        similarity: { loading: true, data: [{}, {}, {}] },
+        state: '',
+        isLike: false
+    } as Movie)
+    // bande annonce is ready
+    const [BAReady, setBAReady] = useState(false)
+    const [creaditFilter, setCreditFilter] :[any,any] =  useState({options:new Set(), dataFilter:[{}, {}, {}]})
+
+
+    const LoadingData = async (idMovie: number) => {
+        const res: any = await Promise.all([
+            GetAllMovieAffiche(idMovie),
+            GetMovieDetail(idMovie),
+            GetMovieVideos(idMovie),
+            GetMovieProvider(idMovie),
+            GetMovieCredit(idMovie)
+        ]).catch((err) => {
+            console.log(err);
+        })
+        console.log('loading');
+        // console.log(res[4].data);
+        // console.log(res[2].data.filter((v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')));
+        const filterMovie = res[2].data.filter((v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'))
+        const distinctThings:Set<string> =  new Set(res[4].data.map((e:any) => {return e.known_for_department}))
+        setCreditFilter({options:Array.from(distinctThings).map((e:string) => {return {id:e,name:e}}),dataFilter:res[4].data})
+        
+        setdataMovie((dataMovie: Movie) => (
+            {
+                ...dataMovie,
+                imagesPath: { loading: false, data: res[0].data.backdrops.slice(0, 5).filter((e: any) => e.iso_639_1 === null) },
+                title: res[1].data.title,
+                description: res[1].data.overview,
+                category: { loading: false, data: res[1].data.genres },
+                videos: { loading: false, data: filterMovie },
+                provider: { loading: false, data: res[3].data?.buy || [] },
+                credits: { loading: false, data: res[4].data }
+
+
+            }
+        ))
+
+        if (filterMovie.length > 0) {
+            setMenuOptions([{ value: 'affiche', label: 'Affiche' }, { value: 'trailer', label: 'B.A.' }])
+
+        }
+
+     
+        // res[4].data.reduce((i:any,t:any)=> console.log(t));
+        
+    }
+    useEffect(() => {
+
+        LoadingData(props.id)
+
+    }, [true])
+
+
+    //this will be use to slide image under the title (transmition work but not the snapToNext methode)
+    const [slideNext, setSlideNext] = useState(0 as number);
+    const [slidePrev, setSlidePrev] = useState(0 as number);
 
     useEffect(() => {
-        TopContent(setAffiche,affiche)
-    },[ affiche.loading])
-    // the content of the component, will stay in scrolling
-    const MainContent = () => {
-        // console.log(dataHome.showByGenre.data.results.length)
-        setMainContentView(
+        TopContent(dataMovie.imagesPath.data, dataMovie.title)
+        // console.log(dataMovie.videos);
+
+    }, [dataMovie.imagesPath.loading, dataMovie.videos.loading, slideNext, slidePrev, menu, BAReady])
+
+    useEffect(() => {
+        MainContent()
+    }, [dataMovie.category.loading, dataMovie.provider.loading, dataMovie.credits.loading])
+
+
+    const renderVideo = (item: any, index: number) => {
+
+        return (
             <View>
-
-                
-
+                <YoutubeIframe height={BAReady ? 500 : 0} play={false} videoId={item.key} onReady={() => { setBAReady(true) }} />
+                {!BAReady ?
+                    <SkeletonLoader radius={10} from={-0.2} to={3.5} duration={1800} /> : undefined}
             </View>
         )
     }
 
+    // the content of the component, will stay in scrolling
+    // content display in the top of the component, will disepear in scrolling
+    const TopContent = (backdrops: any[], title: string) => {
+
+        setAffiche({
+            loading: false,
+            data: menu === 'affiche' ? (
+                <View >
+                    <CarouselTemplate data={backdrops} renderItem={renderAffiche} next={slideNext} previous={slidePrev} loop />
+                    <View style={styles.absolutePosition}>
+                        <GestureRecognizer style={styles.contextOnImage}
+
+                            onSwipeLeft={() => setSlideNext((e) => e + 1)}
+                            onSwipeRight={() => setSlidePrev((e) => e + 1)}
+                        >
+                            <Text style={styles.afficheTitle}>{title} </Text>
+                        </GestureRecognizer>
+                    </View>
+                </View>
+            ) : (
+                <CarouselTemplate data={dataMovie.videos.data} renderItem={({ item, index }: any) => renderVideo(item, index)} />
+
+            )
+        })
+    }
+
+    const MainContent = () => {
+        setMainContentView(
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: '100%' }} >
+                <View style={{ padding: 10, width: '80%' }}>
+                    <LinearSelect genres={dataMovie.category.data} selected={() => []} disabled />
+                </View>
+                <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
+                    <IconButton icon={'favorite'} iconColor={dataMovie.isLike ? red : darkGray} style={[GlovalStyle.round, { backgroundColor: white }]} />
+                </View>
+                <View style={{ alignItems: 'center', width: '100%' }}>
+                    <Text style={[GlovalStyle.rounded, { backgroundColor: darkGray, width: '95%', color: white, padding: 10, textAlign: 'justify' }, GlovalStyle.fontSizeNormal]}>
+                        {dataMovie.description}
+                    </Text>
+                </View>
+                {dataMovie.provider.data.length > 0 ? (
+                    <View>
+                        <Text style={[styles.afficheTitle, styles.paddingTitle]}>Fournisseur</Text>
+                        <View style={styles.paddingTitle}>
+                            <FlatList
+                                data={dataMovie.provider.data}
+                                horizontal={true}
+                                showsHorizontalScrollIndicator={false}
+                                renderItem={({ item }) => <ShowProvider path={item.logo_path} />}
+                                keyExtractor={(item, index) => index as any}
+
+                            />
+                        </View></View>) : undefined
+                }
+                <View style={styles.paddingTitle}>
+                    <LinearSelect genres={creaditFilter.options} selected={() => []}  />
+                    <FlatList
+                        data={dataMovie.credits.data}
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                        renderItem={({ item }) => <ShowComponent loading={dataMovie.credits.loading} show={{ picture: item.profile_path, id: item.id, type: 'person' }} navigation={navigation} />}
+                        keyExtractor={(item, index) => index as any}
+                        
+
+                    />
+                </View>
+
+            </View>
+        )
+
+    }
+
+
+
+
     return (
         <View>
-            <HeaderMenu menu={{ menu: menu, setMenu: setMenu }} options={[{value:'affiche',label:'Affiche'}, {value:'trailer',label:'Bande annonce'}]}></HeaderMenu>
+            <HeaderMenu menu={{ menu: menu, setMenu: setMenu }}
+                options={menuOptions}
+                leftButton={{ icon: 'arrow-back', action: navigation.navigation.goBack }}
+            ></HeaderMenu>
             <ScreenSplit TopContent={affiche} MainContent={mainContentView}></ScreenSplit>
         </View>
     )
@@ -102,10 +227,10 @@ const DetailMovie = (navigation:any) => {
 const styles = StyleSheet.create({
     absolutePosition: {
         position: 'absolute',
-        top: 0,
+        bottom: 0,
         left: 0,
         width: '100%',
-        height: '100%'
+        height: '100%',
     },
     afficheTitle: {
         display: 'flex',
@@ -120,6 +245,6 @@ const styles = StyleSheet.create({
         paddingTop: 5,
         paddingBottom: 5
     },
-    contextOnImage: { display: 'flex', flexDirection: 'row', alignItems: 'flex-end', height: '80%', width: '100%', justifyContent: 'center' }
+    contextOnImage: { display: 'flex', flexDirection: 'row', alignItems: 'flex-end', height: '80%', width: '100%', justifyContent: 'center' },
 })
 export default DetailMovie

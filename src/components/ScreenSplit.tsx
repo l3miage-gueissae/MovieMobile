@@ -18,7 +18,7 @@ const ScreenSplit = (props:props) => {
     const scrolling = useRef(new Animated.Value(0)).current; // scroll Animation value
 
     return (
-        <View >
+        <View style={{backgroundColor:darkpage}} >
             <Animated.ScrollView onScroll={Animated.event(
                 [{
                     nativeEvent: {
@@ -63,7 +63,8 @@ const styles = StyleSheet.create({
         zIndex: 2,
         borderTopLeftRadius:15,
         borderTopRightRadius:15,
-        marginTop:-20
+        marginTop:-20,
+        
     }
 })
 export default ScreenSplit

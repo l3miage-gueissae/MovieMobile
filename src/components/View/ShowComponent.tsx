@@ -1,10 +1,8 @@
 import React, { useState } from 'react'
 import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native'
-import { APIbackroundImage } from '../services/GlobalVariable'
-import { MiniComponent } from '../services/utils/models/miniComponent.model'
-import SkeletonLoader from './loader/skeleton'
-
-import { useNavigation } from 'react-native-navigation-hooks'
+import { APIbackroundImage } from '../../services/GlobalVariable'
+import { MiniComponent } from '../../services/utils/models/miniComponent.model'
+import SkeletonLoader from '../loader/skeleton'
 
 
 type props = { loading: boolean, show: MiniComponent, navigation:any }
@@ -27,7 +25,7 @@ const ShowComponent = (props: props) => {
 
     return (
         <View style={[styles.miniSize]}>
-            {props.loading ? <SkeletonLoader radius={10} from={-0.2} to={2.5} duration={1300} /> : isMini ? renderMini(props) : ''}
+            {props.loading ? <SkeletonLoader radius={10} from={-0.2} to={2.5} duration={1300} /> :  renderMini(props) }
         </View>
     )
 
