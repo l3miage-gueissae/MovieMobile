@@ -5,7 +5,7 @@ import ScreenSplit from '../components/ScreenSplit';
 import type { genre } from '../services/Genre/model/genre.model';
 import CarouselTemplate from '../components/actions/CarouselTemplate';
 import { Movie } from '../services/Movie/model/movie.model';
-import { GetAllMovieAffiche, GetMovieCredit, GetMovieDetail, GetMovieProvider, GetMovieVideos } from '../services/Movie/MovieService';
+import { GetAllMovieAffiche, GetMovieCredit, GetMovieDetail, GetMovieProvider, GetMovieRecommendations, GetMovieSimilar, GetMovieVideos } from '../services/Movie/MovieService';
 import { APIbackroundImage } from '../services/GlobalVariable';
 import { Button, IconButton, Text } from 'react-native-paper';
 import GestureRecognizer from 'react-native-swipe-gestures';
@@ -15,6 +15,7 @@ import YoutubeIframe from 'react-native-youtube-iframe';
 import SkeletonLoader from '../components/loader/skeleton';
 import ShowProvider from '../components/View/ShowProvider';
 import ShowComponent from '../components/View/ShowComponent';
+import ShowRating from '../components/View/ShowRating';
 
 type data<T> = { loading: boolean, data: T }
 
@@ -30,13 +31,22 @@ const renderAffiche = ({ item, index }: any) => {
 
 
 
+type dataName = 'recomendation' | 'similarity'
+
+const content: { title: string, dataName: dataName }[] = [
+    { title: 'Recommendations ', dataName: 'recomendation' },
+    { title: 'Similarité ', dataName: 'similarity' }
+]
+
 
 
 type props = { id: number }
 const DetailMovie = (navigation: any) => {
+
     let [menuOptions, setMenuOptions]: [{ value: string, label: string }[], any] = useState([])
     const [menu, setMenu] = useState('affiche')
     const [affiche, setAffiche] = useState({ loading: true, data: <View></View> })
+    const [betweenContent, setBetweenContent]: [any, any] = useState()
     const [mainContentView, setMainContentView]: [any, any] = useState()
     const props: props = navigation.route.params
     const [dataMovie, setdataMovie] = useState<Movie>({
@@ -52,11 +62,12 @@ const DetailMovie = (navigation: any) => {
         recomendation: { loading: true, data: [{}, {}, {}] },
         similarity: { loading: true, data: [{}, {}, {}] },
         state: '',
+        voteAverage: 0,
         isLike: false
     } as Movie)
     // bande annonce is ready
     const [BAReady, setBAReady] = useState(false)
-    const [creaditFilter, setCreditFilter] :[any,any] =  useState({options:new Set(), dataFilter:[{}, {}, {}]})
+    const [creaditFilter, setCreditFilter]: [any, any] = useState({ options: new Set(), dataFilter: [{}, {}, {}] })
 
 
     const LoadingData = async (idMovie: number) => {
@@ -65,29 +76,33 @@ const DetailMovie = (navigation: any) => {
             GetMovieDetail(idMovie),
             GetMovieVideos(idMovie),
             GetMovieProvider(idMovie),
-            GetMovieCredit(idMovie)
+            GetMovieCredit(idMovie),
+            GetMovieRecommendations(idMovie),
+            GetMovieSimilar(idMovie)
         ]).catch((err) => {
             console.log(err);
         })
         console.log('loading');
-        // console.log(res[4].data);
+        // console.log(res[1].data);
         // console.log(res[2].data.filter((v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')));
         const filterMovie = res[2].data.filter((v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'))
-        const distinctThings:Set<string> =  new Set(res[4].data.map((e:any) => {return e.known_for_department}))
-        setCreditFilter({options:Array.from(distinctThings).map((e:string) => {return {id:e,name:e}}),dataFilter:res[4].data})
-        
+        const distinctThings: Set<string> = new Set(res[4].data.map((e: any) => { return e.known_for_department }))
+        setCreditFilter({ options: Array.from(distinctThings).map((e: string) => { return { id: e, name: e } }), dataFilter: res[4].data })
+
         setdataMovie((dataMovie: Movie) => (
             {
                 ...dataMovie,
                 imagesPath: { loading: false, data: res[0].data.backdrops.slice(0, 5).filter((e: any) => e.iso_639_1 === null) },
                 title: res[1].data.title,
                 description: res[1].data.overview,
+                voteAverage: res[1].data.vote_average,
                 category: { loading: false, data: res[1].data.genres },
                 videos: { loading: false, data: filterMovie },
                 provider: { loading: false, data: res[3].data?.buy || [] },
-                credits: { loading: false, data: res[4].data }
-
-
+                credits: { loading: false, data: res[4].data.filter((e: any) => e?.profile_path) },
+                recomendation: { loading: false, data: res[5].data.results },
+                similarity: { loading: false, data: res[6].data.results },
+                //vérif les porfil image, certain acteur n'apparaiise pas 
             }
         ))
 
@@ -96,14 +111,13 @@ const DetailMovie = (navigation: any) => {
 
         }
 
-     
+
         // res[4].data.reduce((i:any,t:any)=> console.log(t));
-        
+
     }
     useEffect(() => {
 
         LoadingData(props.id)
-
     }, [true])
 
 
@@ -118,20 +132,15 @@ const DetailMovie = (navigation: any) => {
     }, [dataMovie.imagesPath.loading, dataMovie.videos.loading, slideNext, slidePrev, menu, BAReady])
 
     useEffect(() => {
+        BetweenContent()
+    }, [dataMovie.category.loading])
+
+    useEffect(() => {
         MainContent()
-    }, [dataMovie.category.loading, dataMovie.provider.loading, dataMovie.credits.loading])
+    }, [dataMovie.category.loading, dataMovie.provider.loading, dataMovie.credits.loading, creaditFilter.dataFilter.length])
 
 
-    const renderVideo = (item: any, index: number) => {
 
-        return (
-            <View>
-                <YoutubeIframe height={BAReady ? 500 : 0} play={false} videoId={item.key} onReady={() => { setBAReady(true) }} />
-                {!BAReady ?
-                    <SkeletonLoader radius={10} from={-0.2} to={3.5} duration={1800} /> : undefined}
-            </View>
-        )
-    }
 
     // the content of the component, will stay in scrolling
     // content display in the top of the component, will disepear in scrolling
@@ -149,8 +158,12 @@ const DetailMovie = (navigation: any) => {
                             onSwipeRight={() => setSlidePrev((e) => e + 1)}
                         >
                             <Text style={styles.afficheTitle}>{title} </Text>
+
                         </GestureRecognizer>
+
                     </View>
+
+
                 </View>
             ) : (
                 <CarouselTemplate data={dataMovie.videos.data} renderItem={({ item, index }: any) => renderVideo(item, index)} />
@@ -159,52 +172,94 @@ const DetailMovie = (navigation: any) => {
         })
     }
 
+    const BetweenContent = () => {
+        setBetweenContent(<ShowRating rating={dataMovie.voteAverage }/>)
+    }
+
     const MainContent = () => {
         setMainContentView(
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: '100%' }} >
-                <View style={{ padding: 10, width: '80%' }}>
-                    <LinearSelect genres={dataMovie.category.data} selected={() => []} disabled />
-                </View>
-                <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
-                    <IconButton icon={'favorite'} iconColor={dataMovie.isLike ? red : darkGray} style={[GlovalStyle.round, { backgroundColor: white }]} />
-                </View>
-                <View style={{ alignItems: 'center', width: '100%' }}>
-                    <Text style={[GlovalStyle.rounded, { backgroundColor: darkGray, width: '95%', color: white, padding: 10, textAlign: 'justify' }, GlovalStyle.fontSizeNormal]}>
-                        {dataMovie.description}
-                    </Text>
-                </View>
-                {dataMovie.provider.data.length > 0 ? (
-                    <View>
-                        <Text style={[styles.afficheTitle, styles.paddingTitle]}>Fournisseur</Text>
-                        <View style={styles.paddingTitle}>
+            <View >
+
+
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: '100%' }} >
+
+                    <View style={{ padding: 10, width: '80%' }}>
+                        <LinearSelect genres={dataMovie.category.data} selected={() => []} disabled />
+                    </View>
+                    <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
+                        <IconButton icon={'favorite'} iconColor={dataMovie.isLike ? red : darkGray} style={[GlovalStyle.round, { backgroundColor: white }]} />
+                    </View>
+                    <View style={{ alignItems: 'center', width: '100%' }}>
+                        <Text style={[GlovalStyle.rounded, { backgroundColor: darkGray, width: '95%', color: white, padding: 10, textAlign: 'justify' }, GlovalStyle.fontSizeNormal]}>
+                            {dataMovie.description}
+                        </Text>
+                    </View>
+                    {dataMovie.provider.data.length > 0 ? (
+                        <View>
+                            <Text style={[styles.afficheTitle, styles.paddingTitle]}>Fournisseurs</Text>
+                            <View style={styles.paddingTitle}>
+                                <FlatList
+                                    data={dataMovie.provider.data}
+                                    horizontal={true}
+                                    showsHorizontalScrollIndicator={false}
+                                    renderItem={({ item }) => <ShowProvider path={item.logo_path} />}
+                                    keyExtractor={(item, index) => index as any}
+
+                                />
+                            </View></View>) : undefined
+                    }
+                    <View style={styles.paddingTitle}>
+                        <Text style={[styles.afficheTitle, styles.paddingTitle]}>Personne</Text>
+                        <LinearSelect genres={creaditFilter.options} selected={filterCredit} />
+                        <FlatList
+                            data={creaditFilter.dataFilter}
+                            horizontal={true}
+                            showsHorizontalScrollIndicator={false}
+                            renderItem={({ item }) => <ShowComponent loading={dataMovie.credits.loading} show={{ picture: item.profile_path, id: item.id, type: 'person', acteurName: item.name }} navigation={navigation} />}
+                            keyExtractor={(item, index) => index as any}
+                        />
+                    </View>
+
+                    {content.map((list) => {
+                        return dataMovie[list.dataName].data.length > 0 ? (<View>
+                            <Text style={[styles.afficheTitle, styles.paddingTitle]}>{list.title}</Text>
                             <FlatList
-                                data={dataMovie.provider.data}
+
                                 horizontal={true}
-                                showsHorizontalScrollIndicator={false}
-                                renderItem={({ item }) => <ShowProvider path={item.logo_path} />}
+                                data={dataMovie[list.dataName].data}
+                                renderItem={({ item }) => <ShowComponent loading={dataMovie[list.dataName].loading} show={{ picture: item.poster_path, id: item.id, type: 'movie' }} navigation={navigation.navigation} />}
                                 keyExtractor={(item, index) => index as any}
-
+                                showsHorizontalScrollIndicator={false}
                             />
-                        </View></View>) : undefined
-                }
-                <View style={styles.paddingTitle}>
-                    <LinearSelect genres={creaditFilter.options} selected={() => []}  />
-                    <FlatList
-                        data={dataMovie.credits.data}
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                        renderItem={({ item }) => <ShowComponent loading={dataMovie.credits.loading} show={{ picture: item.profile_path, id: item.id, type: 'person' }} navigation={navigation} />}
-                        keyExtractor={(item, index) => index as any}
-                        
+                        </View>
 
-                    />
+                        ) : undefined
+                    })}
+
                 </View>
-
             </View>
+
         )
 
     }
 
+
+    //utils functions 
+    const renderVideo = (item: any, index: number) => {
+
+        return (
+            <View>
+                <YoutubeIframe height={BAReady ? 500 : 0} play={false} videoId={item.key} onReady={() => { setBAReady(true) }} />
+                {!BAReady ?
+                    <SkeletonLoader radius={10} from={-0.2} to={3.5} duration={1800} /> : undefined}
+            </View>
+        )
+    }
+
+    const filterCredit = (selectFilter: string[]) => {
+        setCreditFilter((data: any) => ({ ...data, dataFilter: selectFilter.length > 0 ? dataMovie.credits.data.filter(e => selectFilter.includes(e.known_for_department)) : dataMovie.credits.data }))
+
+    }
 
 
 
@@ -214,7 +269,7 @@ const DetailMovie = (navigation: any) => {
                 options={menuOptions}
                 leftButton={{ icon: 'arrow-back', action: navigation.navigation.goBack }}
             ></HeaderMenu>
-            <ScreenSplit TopContent={affiche} MainContent={mainContentView}></ScreenSplit>
+            <ScreenSplit TopContent={affiche} MainContent={mainContentView} BetweenContent={betweenContent}></ScreenSplit>
         </View>
     )
 

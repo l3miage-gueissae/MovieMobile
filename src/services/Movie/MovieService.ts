@@ -40,4 +40,18 @@ export const GetMovieCredit = async (idMovie:number) => {
     return dataRes;
 }
 
+export const GetMovieRecommendations = async (idMovie:number) => {
+    let dataRes: responseSuccess<any>   
+    const res = await axios.get(`${APIurl}/movie/${idMovie}/recommendations?api_key=${APItoken}&language=${APPlanguage}`)
+    res.status === HttpStatus.OK ?  dataRes = {success:true,data:res.data || []} :  dataRes = {success:false,codeError: res.status , error: res.statusText} 
+    return dataRes;
+}
+
+export const GetMovieSimilar = async (idMovie:number) => {
+    let dataRes: responseSuccess<any>   
+    const res = await axios.get(`${APIurl}/movie/${idMovie}/similar?api_key=${APItoken}&language=${APPlanguage}`)    
+    res.status === HttpStatus.OK ?  dataRes = {success:true,data:res.data || []} :  dataRes = {success:false,codeError: res.status , error: res.statusText} 
+    return dataRes;
+}
+
 

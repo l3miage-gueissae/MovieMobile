@@ -4,4 +4,5 @@ export interface MiniComponent {
     picture:string,
     id:number,
     type: media_type // don't use ALL
+    acteurName?:string // only for acteur
 }

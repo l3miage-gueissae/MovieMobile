@@ -14,6 +14,7 @@ export interface Movie {
     recomendation: loading<any[]>
     similarity: loading<any[]>
     opinions:loading<any[]>
+    voteAverage:number
     state : string // new , soom , realesed ... pour plus tard
     // action 
     isLike:boolean
