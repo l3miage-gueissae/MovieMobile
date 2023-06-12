@@ -16,6 +16,8 @@ import SkeletonLoader from '../components/loader/skeleton';
 import ShowProvider from '../components/View/ShowProvider';
 import ShowComponent from '../components/View/ShowComponent';
 import ShowRating from '../components/View/ShowRating';
+import { MiniComponent } from '../services/utils/models/miniComponent.model';
+import { likeShow, unLikeShow, getShow } from '../services/User/user.service';
 
 type data<T> = { loading: boolean, data: T }
 
@@ -40,7 +42,7 @@ const content: { title: string, dataName: dataName }[] = [
 
 
 
-type props = { id: number }
+type props = { show: MiniComponent }
 const DetailMovie = (navigation: any) => {
 
     let [menuOptions, setMenuOptions]: [{ value: string, label: string }[], any] = useState([])
@@ -50,7 +52,7 @@ const DetailMovie = (navigation: any) => {
     const [mainContentView, setMainContentView]: [any, any] = useState()
     const props: props = navigation.route.params
     const [dataMovie, setdataMovie] = useState<Movie>({
-        id: props.id,
+        id: props.show.id,
         category: { loading: true, data: [] as genre[] },
         title: '',
         description: '',
@@ -71,6 +73,8 @@ const DetailMovie = (navigation: any) => {
 
 
     const LoadingData = async (idMovie: number) => {
+        const isLike = getShow(props.show) >=0 
+          
         const res: any = await Promise.all([
             GetAllMovieAffiche(idMovie),
             GetMovieDetail(idMovie),
@@ -102,6 +106,7 @@ const DetailMovie = (navigation: any) => {
                 credits: { loading: false, data: res[4].data.filter((e: any) => e?.profile_path) },
                 recomendation: { loading: false, data: res[5].data.results },
                 similarity: { loading: false, data: res[6].data.results },
+                isLike: isLike
                 //vérif les porfil image, certain acteur n'apparaiise pas 
             }
         ))
@@ -117,7 +122,7 @@ const DetailMovie = (navigation: any) => {
     }
     useEffect(() => {
 
-        LoadingData(props.id)
+        LoadingData(props.show.id)
     }, [true])
 
 
@@ -137,9 +142,25 @@ const DetailMovie = (navigation: any) => {
 
     useEffect(() => {
         MainContent()
-    }, [dataMovie.category.loading, dataMovie.provider.loading, dataMovie.credits.loading, creaditFilter.dataFilter.length])
+    }, [dataMovie.category.loading, dataMovie.provider.loading, dataMovie.credits.loading, creaditFilter.dataFilter.length, dataMovie.isLike])
 
 
+    const likeMovie = async () => {
+        if (await likeShow(props.show))
+            setdataMovie((dataMovie: Movie) => (
+                {
+                    ...dataMovie,
+                    isLike: true
+                }))
+    }
+    const unLikeMovie = async () => {
+        if (await unLikeShow(props.show))
+            setdataMovie((dataMovie: Movie) => (
+                {
+                    ...dataMovie,
+                    isLike: false
+                }))
+    }
 
 
     // the content of the component, will stay in scrolling
@@ -173,7 +194,7 @@ const DetailMovie = (navigation: any) => {
     }
 
     const BetweenContent = () => {
-        setBetweenContent(<ShowRating rating={dataMovie.voteAverage }/>)
+        setBetweenContent(<ShowRating rating={dataMovie.voteAverage} />)
     }
 
     const MainContent = () => {
@@ -187,7 +208,7 @@ const DetailMovie = (navigation: any) => {
                         <LinearSelect genres={dataMovie.category.data} selected={() => []} disabled />
                     </View>
                     <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
-                        <IconButton icon={'favorite'} iconColor={dataMovie.isLike ? red : darkGray} style={[GlovalStyle.round, { backgroundColor: white }]} />
+                        <IconButton onPress={() => dataMovie.isLike ? unLikeMovie() : likeMovie()} icon={'favorite'} iconColor={dataMovie.isLike ? red : darkGray} style={[GlovalStyle.round, { backgroundColor: white }]} />
                     </View>
                     <View style={{ alignItems: 'center', width: '100%' }}>
                         <Text style={[GlovalStyle.rounded, { backgroundColor: darkGray, width: '95%', color: white, padding: 10, textAlign: 'justify' }, GlovalStyle.fontSizeNormal]}>

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { StyleSheet, View, Animated, Text, TouchableOpacity, ImageBackground } from 'react-native'
+import { darkGray } from '../../css/ThemeColor'
 
 
 
@@ -37,7 +38,7 @@ const SkeletonLoader = (props: { radius: number, from:number, to:number, duratio
 
 
     return (
-        <ImageBackground source={require('../../assets/logo.png')} blurRadius={15}  style={[styles.backGround, { borderRadius: props.radius }]} >
+        <ImageBackground source={require('../../assets/logo.png')} blurRadius={5}  style={[styles.backGround, { borderRadius: props.radius }]} >
             <Animated.View    style={[styles.bar, { transform: [{ translateX: leftToRight }] }]} />
         </ImageBackground>
     )
@@ -48,7 +49,7 @@ const SkeletonLoader = (props: { radius: number, from:number, to:number, duratio
 
 const styles = StyleSheet.create({
     backGround: {
-        backgroundColor: 'gray',
+        backgroundColor: darkGray,
         width: '100%',
         height: '100%',
         overflow:'hidden',

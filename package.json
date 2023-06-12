@@ -10,6 +10,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-firebase/app": "^18.0.0",
+    "@react-native-firebase/auth": "^18.0.0",
+    "@react-native-firebase/firestore": "^18.0.0",
+    "@react-native-google-signin/google-signin": "^10.0.1",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
     "@types/react-native-snap-carousel": "^3.8.5",
@@ -25,7 +29,8 @@
     "react-native-swipe-gestures": "^1.0.5",
     "react-native-vector-icons": "^9.2.0",
     "react-native-webview": "^12.0.2",
-    "react-native-youtube-iframe": "^2.2.2"
+    "react-native-youtube-iframe": "^2.2.2",
+    "use-count-up": "^3.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -7,7 +7,7 @@
 
 import { NavigationContainer, } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     MD3LightTheme as DefaultTheme,
    Provider as PaperProvider } from 'react-native-paper';
@@ -15,7 +15,14 @@ import Home from './screens/Home';
 import DetailMovie from './screens/DetailMovie';
 import  MaterialIcons from 'react-native-vector-icons/MaterialIcons' 
 import { darkGray } from './css/ThemeColor';
+import Start from './screens/Start';
 
+import auth from '@react-native-firebase/auth';
+import { googleConfiguration, googleLogin } from './services/Auth/google';
+import Connexion from './screens/Connexion';
+import { setUser } from './services/User/user.service';
+
+googleConfiguration()
 
 const Stack = createNativeStackNavigator();
 const theme = {
@@ -45,8 +52,26 @@ const theme = {
 
 };
 
-class App extends React.Component {
-  render(): JSX.Element {
+const App = ()  =>  {
+
+  // const [user, setUser] = useState(undefined);
+
+  // Handle user state changes
+  function onAuthStateChanged(user:any) {
+    setUser(user)
+    // setUser(usert);
+  }
+
+
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    
+
+    
+  }, [true]);
+
+
 
     return (
       <PaperProvider 
@@ -57,11 +82,18 @@ class App extends React.Component {
       >
         <NavigationContainer>
           <Stack.Navigator>
-            {/* <Stack.Screen
-              name="test"
-              component={test}
-
-            /> */}
+            <Stack.Screen
+              name="Start"
+              component={Start}
+              options={{headerShown:false}}
+            
+            />
+            <Stack.Screen
+              name="Connexion"
+              component={Connexion}
+              options={{headerShown:false}}
+              // initialParams={}
+            />
             <Stack.Screen
               name="Home"
               component={Home}
@@ -82,7 +114,7 @@ class App extends React.Component {
     )
   }
 
-}
+
 
 
 

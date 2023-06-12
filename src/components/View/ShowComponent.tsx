@@ -43,7 +43,7 @@ const RedirectToDetailPage = (props: props) => {
         case 'tv':
             console.log('tv'); break;
         case 'movie':
-            console.log('movie : ' + props); props.navigation.push('DetailMovie', { id: props.show.id, navigation: props.navigation }); break;
+            console.log('movie : ' + props); props.navigation.push('DetailMovie', { show: props.show, navigation: props.navigation }); break;
         case 'person':
             console.log('person'); break;
 

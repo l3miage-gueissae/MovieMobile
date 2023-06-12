@@ -1,9 +1,8 @@
 import React, { useState } from 'react'
-import { StyleSheet, View, Text } from 'react-native'
-import { IconButton, SegmentedButtons } from 'react-native-paper'
+import { StyleSheet, View, Text, Image } from 'react-native'
+import { Avatar, IconButton, SegmentedButtons } from 'react-native-paper'
 import { darkpage, GlovalStyle, primary } from '../css/ThemeColor'
-
-
+import { User } from '../services/User/user.service'
 
 
 
@@ -42,6 +41,7 @@ const HeaderMenu = (props: props) => {
                         containerColor={darkpage}
                         style={[GlovalStyle.round, styles.border]}
                         onPress={props.leftButton ? props.leftButton.action : undefined}
+                        size={25}
                     />
 
                 </View>
@@ -50,13 +50,16 @@ const HeaderMenu = (props: props) => {
 
                 </View>
                 <View style={[styles.partMenuContainer, { width: '20%' }]}>
-                    <IconButton
+                    
+                    {User ? <Avatar.Image size={40} source={{uri:User.photoURL}}/>  
+                    : <IconButton
                         icon='account-circle'
                         iconColor={'white'}
                         containerColor={darkpage}
                         style={[GlovalStyle.round, styles.border]}
 
-                    />
+                    /> }
+                   
                 </View>
             </View>
         </View>
