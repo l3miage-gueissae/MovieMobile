@@ -289,7 +289,9 @@ const DetailMovie = (navigation: any) => {
             <HeaderMenu menu={{ menu: menu, setMenu: setMenu }}
                 options={menuOptions}
                 leftButton={{ icon: 'arrow-back', action: navigation.navigation.goBack }}
-            ></HeaderMenu>
+                navigation={navigation}
+                
+            />
             <ScreenSplit TopContent={affiche} MainContent={mainContentView} BetweenContent={betweenContent}></ScreenSplit>
         </View>
     )

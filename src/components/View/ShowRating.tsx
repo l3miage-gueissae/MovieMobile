@@ -40,9 +40,10 @@ const ShowRating = (props: props) => {
     return [
         <Animated.View style={[styles.slideBar, {
             transform: [{ translateX: translateX }], backgroundColor: boxInterpolation
-        }]}>
+        }]} key={'showRating-slide-animation-000001'}>
         </Animated.View>,
-        <Animated.View style={[styles.ratingRound,{ backgroundColor: boxInterpolation, alignItems: 'center', height: 25, marginTop: -10, transform: [{ translateX: translateX }] }, GlovalStyle.round]}>
+        <Animated.View key={'showRating-dot-rating-animation-00001'}
+        style={[styles.ratingRound, { backgroundColor: boxInterpolation, alignItems: 'center', height: 25, marginTop: -10, transform: [{ translateX: translateX }] }, GlovalStyle.round]}>
 
             <Text style={{ color: white, fontWeight: '700', fontSize: 13 }}><CountUp isCounting start={0} end={props.rating} duration={1.5} decimalPlaces={1} /></Text>
         </Animated.View>

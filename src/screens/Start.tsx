@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Image, StyleSheet, View } from 'react-native'
 import { darkpage } from '../css/ThemeColor'
-import { googleLogin } from '../services/Auth/google';
 import { User } from '../services/User/user.service';
 
 
@@ -11,13 +10,11 @@ import { User } from '../services/User/user.service';
 
 
 const Start = ({navigation,route}) => {
-    const connect = async  () => {
-        await  googleLogin()
-    }
-    connect()
+  
     setTimeout(() => {
+        console.log(User);
         
-        if(User !== undefined)
+        if(User !== null)
             navigation.replace('Home')
         else{
             navigation.replace('Connexion')

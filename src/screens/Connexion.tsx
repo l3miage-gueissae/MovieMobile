@@ -13,7 +13,6 @@ import { Button, Card, Text } from 'react-native-paper';
 
 const Connexion = ({ navigation, route }) => {
     // const { user } = route.params;
-    // googleLogin()
     const connect =  () => {
         googleLogin().then(() => {
             

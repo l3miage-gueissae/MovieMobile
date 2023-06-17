@@ -57,8 +57,8 @@ const App = ()  =>  {
   // const [user, setUser] = useState(undefined);
 
   // Handle user state changes
-  function onAuthStateChanged(user:any) {
-    setUser(user)
+  async function  onAuthStateChanged(user:any) {
+    await setUser(user)
     // setUser(usert);
   }
 
