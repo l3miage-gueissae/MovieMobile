@@ -16,7 +16,6 @@ const LinearSelect = (props:props) => {
     },[selected.length])
 
     useEffect(() => {
-        // props.selected([selected])
         setSelected([])
     },[props.genres])
 

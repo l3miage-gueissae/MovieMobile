@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { googleLogin } from '../services/Auth/google';
 import { darkpage, white } from '../css/ThemeColor';
 import { Button, Card, Text } from 'react-native-paper';
+import { GoogleService } from '../services/Auth/google';
+import { UserService } from '../services/User/user.service';
 
 
 
@@ -12,19 +13,22 @@ import { Button, Card, Text } from 'react-native-paper';
 
 
 const Connexion = ({ navigation, route }) => {
-    // const { user } = route.params;
-    const connect =  () => {
-        googleLogin().then(() => {
-            
+
+    const connect = async () => {
+        
+         GoogleService.googleLogin().then( async () => {
             navigation.replace('Home')
         }).catch((error:any) => {
-            console.log(error);
+            console.error(error);
             
         })
+
         
     }
+
+     connect()
     return (
-        <View style={{ backgroundColor: darkpage, height: '100%', width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }} >
+        <View style={{ backgroundColor: darkpage, height: '100%', width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}  key={'Connexion-00001'}>
             <Card style={{ backgroundColor: white, height: '30%', width: '80%', }}>
                 <Card.Content style={{ justifyContent: 'center', }}>
                     <Text variant="titleLarge" style={{ textAlign: 'center', textAlignVertical: 'center',  height: '40%' }}>Connexion</Text>

@@ -5,19 +5,19 @@ import ScreenSplit from '../components/ScreenSplit';
 import type { genre } from '../services/Genre/model/genre.model';
 import CarouselTemplate from '../components/actions/CarouselTemplate';
 import { Movie } from '../services/Movie/model/movie.model';
-import { GetAllMovieAffiche, GetMovieCredit, GetMovieDetail, GetMovieProvider, GetMovieRecommendations, GetMovieSimilar, GetMovieVideos } from '../services/Movie/MovieService';
+import { MovieService } from '../services/Movie/MovieService';
 import { APIbackroundImage } from '../services/GlobalVariable';
-import { Button, IconButton, Text } from 'react-native-paper';
+import { IconButton, Text } from 'react-native-paper';
 import GestureRecognizer from 'react-native-swipe-gestures';
 import LinearSelect from '../components/actions/LinearSelect';
-import { darkGray, GlovalStyle, primary, red, white } from '../css/ThemeColor';
+import { darkGray, GlovalStyle, red, white } from '../css/ThemeColor';
 import YoutubeIframe from 'react-native-youtube-iframe';
 import SkeletonLoader from '../components/loader/skeleton';
 import ShowProvider from '../components/View/ShowProvider';
 import ShowComponent from '../components/View/ShowComponent';
 import ShowRating from '../components/View/ShowRating';
 import { MiniComponent } from '../services/utils/models/miniComponent.model';
-import { likeShow, unLikeShow, getShow } from '../services/User/user.service';
+import { UserService } from '../services/User/user.service';
 
 type data<T> = { loading: boolean, data: T }
 
@@ -73,22 +73,19 @@ const DetailMovie = (navigation: any) => {
 
 
     const LoadingData = async (idMovie: number) => {
-        const isLike = getShow(props.show) >=0 
+        const isLike = UserService.getShow(props.show) >=0 
           
         const res: any = await Promise.all([
-            GetAllMovieAffiche(idMovie),
-            GetMovieDetail(idMovie),
-            GetMovieVideos(idMovie),
-            GetMovieProvider(idMovie),
-            GetMovieCredit(idMovie),
-            GetMovieRecommendations(idMovie),
-            GetMovieSimilar(idMovie)
+            MovieService.GetAllMovieAffiche(idMovie),
+            MovieService.GetMovieDetail(idMovie),
+            MovieService.GetMovieVideos(idMovie),
+            MovieService.GetMovieProvider(idMovie),
+            MovieService.GetMovieCredit(idMovie),
+            MovieService.GetMovieRecommendations(idMovie),
+            MovieService.GetMovieSimilar(idMovie)
         ]).catch((err) => {
             console.log(err);
         })
-        console.log('loading');
-        // console.log(res[1].data);
-        // console.log(res[2].data.filter((v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')));
         const filterMovie = res[2].data.filter((v: any) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'))
         const distinctThings: Set<string> = new Set(res[4].data.map((e: any) => { return e.known_for_department }))
         setCreditFilter({ options: Array.from(distinctThings).map((e: string) => { return { id: e, name: e } }), dataFilter: res[4].data })
@@ -107,18 +104,12 @@ const DetailMovie = (navigation: any) => {
                 recomendation: { loading: false, data: res[5].data.results },
                 similarity: { loading: false, data: res[6].data.results },
                 isLike: isLike
-                //vérif les porfil image, certain acteur n'apparaiise pas 
             }
         ))
 
         if (filterMovie.length > 0) {
             setMenuOptions([{ value: 'affiche', label: 'Affiche' }, { value: 'trailer', label: 'B.A.' }])
-
         }
-
-
-        // res[4].data.reduce((i:any,t:any)=> console.log(t));
-
     }
     useEffect(() => {
 
@@ -132,7 +123,6 @@ const DetailMovie = (navigation: any) => {
 
     useEffect(() => {
         TopContent(dataMovie.imagesPath.data, dataMovie.title)
-        // console.log(dataMovie.videos);
 
     }, [dataMovie.imagesPath.loading, dataMovie.videos.loading, slideNext, slidePrev, menu, BAReady])
 
@@ -146,7 +136,7 @@ const DetailMovie = (navigation: any) => {
 
 
     const likeMovie = async () => {
-        if (await likeShow(props.show))
+        if (await UserService.likeShow(props.show))
             setdataMovie((dataMovie: Movie) => (
                 {
                     ...dataMovie,
@@ -154,7 +144,7 @@ const DetailMovie = (navigation: any) => {
                 }))
     }
     const unLikeMovie = async () => {
-        if (await unLikeShow(props.show))
+        if (await UserService.unLikeShow(props.show))
             setdataMovie((dataMovie: Movie) => (
                 {
                     ...dataMovie,
@@ -170,7 +160,7 @@ const DetailMovie = (navigation: any) => {
         setAffiche({
             loading: false,
             data: menu === 'affiche' ? (
-                <View >
+                <View key={'DetailMovie-TopContent-00001'}>
                     <CarouselTemplate data={backdrops} renderItem={renderAffiche} next={slideNext} previous={slidePrev} loop />
                     <View style={styles.absolutePosition}>
                         <GestureRecognizer style={styles.contextOnImage}
@@ -199,7 +189,7 @@ const DetailMovie = (navigation: any) => {
 
     const MainContent = () => {
         setMainContentView(
-            <View >
+            <View key={'DetailMovie-MainContent-00001'}>
 
 
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: '100%' }} >
@@ -241,8 +231,8 @@ const DetailMovie = (navigation: any) => {
                         />
                     </View>
 
-                    {content.map((list) => {
-                        return dataMovie[list.dataName].data.length > 0 ? (<View>
+                    {content.map((list,i) => {
+                        return dataMovie[list.dataName].data.length > 0 ? (<View key={list.dataName + i} >
                             <Text style={[styles.afficheTitle, styles.paddingTitle]}>{list.title}</Text>
                             <FlatList
 

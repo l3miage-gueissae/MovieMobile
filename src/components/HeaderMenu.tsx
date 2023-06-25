@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { StyleSheet, View, Text, TouchableOpacity, Animated } from 'react-native'
 import { Avatar, Drawer, IconButton, SegmentedButtons } from 'react-native-paper'
 import { darkGray, darkpage, GlovalStyle, primary, white } from '../css/ThemeColor'
-import { User, disconnectUser } from '../services/User/user.service'
+import { User, UserService } from '../services/User/user.service'
 
 
 
@@ -12,7 +12,7 @@ import { User, disconnectUser } from '../services/User/user.service'
 
 type props = { menu: { menu: any, setMenu: any }, options: { value: string, label: string }[], leftButton?: { icon: string, action: any }, navigation: any }
 const HeaderMenu = (props: props) => {
-
+    
     //middle button of header
     const renderMiddleButton = () => {
         if (props.options.length > 1) {
@@ -49,7 +49,6 @@ const HeaderMenu = (props: props) => {
     })
 
     const OpenDrawer = () => {
-        console.log(drawer);
         if (drawer !== undefined) {
             close.start()
             setDrawer(undefined)
@@ -59,7 +58,7 @@ const HeaderMenu = (props: props) => {
     }
 
     const logout = () => {
-        disconnectUser().then(() => {
+        UserService.disconnectUser().then(() => {
             props.navigation.replace('Connexion')
         }).catch(() => {
             console.error('Can\'t logout');

@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { StyleSheet, View, Text, Image, Animated, FlatList } from 'react-native'
-import { Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Image, Animated, FlatList, TouchableOpacity } from 'react-native'
 import LinearSelect from '../components/actions/LinearSelect';
 import HeaderMenu from '../components/HeaderMenu';
 import ScreenSplit from '../components/ScreenSplit';
 import ShowComponent from '../components/View/ShowComponent';
-import { ShowDiscovery, MovieTrend } from '../services/Discovery/discovery.service';
+import { DicoveryService } from '../services/Discovery/discovery.service';
 import { paramDiscovery } from '../services/Discovery/model/discovery.model';
-import { getAllGenre } from '../services/Genre/genre.service';
+import { GenreService } from '../services/Genre/genre.service';
 import { genre } from '../services/Genre/model/genre.model';
 import { APIbackroundImage } from '../services/GlobalVariable';
 import { media_type } from '../services/Movie/model/trending.model';
-import { getShows } from '../services/User/user.service'
+import { UserService } from '../services/User/user.service'
 import { useFocusEffect } from '@react-navigation/native';
 
 type data<T> = { loading: boolean, data: T }
@@ -31,31 +30,16 @@ const content: { title: string, dataName: dataName }[] = [
 
 
 
-// content display in the top of the component, will disepear in scrolling
-const TopContent = (setAffiche: any, data: any) => {
-    setAffiche({
-        loading: false,
-        data: (
-            <View  key={'home-topContent-00001'}>
-                <Image style={{ width: "100%", height: "100%" }} source={{ uri: `${APIbackroundImage}/w1280${data.backdrop_path}` }} />
-                <View style={styles.absolutePosition}>
-                    <View style={styles.contextOnImage}>
-                        <Text style={styles.afficheTitle}>{data.title ? data.title : data.name}</Text>
-                    </View>
-                </View>
-            </View>
-        )
-    })
-}
+
 
 const loadDataTopContent = async (menu: media_type, setDatahome: any) => {
     const discovey: paramDiscovery = { include_adult: false, include_video: false, sort_by: 'popularity.desc' }
 
     const res: any = await Promise.all([
-        MovieTrend(menu),
-        getAllGenre(menu),
-        ShowDiscovery(menu, discovey, 1),
-        getShows()
+        DicoveryService.MovieTrend(menu),
+        GenreService.getAllGenre(menu),
+        DicoveryService.ShowDiscovery(menu, discovey, 1),
+        UserService.getShows()
     ]).catch((err) => {
         console.log(err);
     })
@@ -69,11 +53,10 @@ const loadDataTopContent = async (menu: media_type, setDatahome: any) => {
 }
 
 const loadMoviefromGenreMovie = (menu: media_type, genres: number[], setDatahome: any) => {
-    console.log(genres)
     setDatahome((datahome: any) => ({ ...datahome, showByGenre: { loading: true, data: [{}, {}, {}, {}, {}, {}, {}, {}] } }))
 
     const discovey: paramDiscovery = { genres: genres, include_adult: false, include_video: false, sort_by: 'popularity.desc' }
-    ShowDiscovery(menu, discovey, 1).then((res) => {
+    DicoveryService.ShowDiscovery(menu, discovey, 1).then((res) => {
         if (res.success)
             setDatahome((datahome: any) => ({ ...datahome, showByGenre: { loading: false, data: res.data } }))
     })
@@ -87,7 +70,7 @@ const loadMoviefromGenreMovie = (menu: media_type, genres: number[], setDatahome
 
 
 const Home = ({ navigation }) => {
-    const [affiche, setAffiche] = useState({ loading: true, data: '' })
+    const [affiche, setAffiche] : [any,any] = useState({ loading: true, data: '' })
     const [mainContentView, setMainContentView]: [any, any] = useState()
     const [dataHome, setDatahome] = useState({
         trend: { loading: true, data: [{}, {}, {}, {}, {}, {}, {}, {}] },
@@ -115,7 +98,7 @@ const Home = ({ navigation }) => {
                 ...datahome,
                 likes: { loading: true, data: [] }
             }))
-            getShows().then(data => {
+            UserService.getShows().then(data => {
                 setDatahome((datahome: any) => ({
                     ...datahome,
                     likes: { loading: false, data: data }
@@ -129,20 +112,41 @@ const Home = ({ navigation }) => {
         MainContent()
     }, [dataHome.trend.loading, dataHome.genre.loading, dataHome.showByGenre.loading, dataHome.likes.loading])
     useEffect(() => {
-        TopContent(setAffiche, dataHome.trend.data[0])
+        TopContent(dataHome.trend.data[0])
     }, [dataHome.trend.loading])
 
 
 
+    // content display in the top of the component, will disepear in scrolling
+    const TopContent = ( data: any) => {
+        const click = () => {
+            menu === 'movie' ? 
+            navigation.push('DetailMovie',  { show:{ picture: data.poster_path, id: data.id, type: menu }})
+            : undefined
+        }
+
+        setAffiche({
+            loading: false,
+            data: (
+                <TouchableOpacity key={'home-topContent-00001'} onPress={() => click()}>
+                    <Image style={{ width: "100%", height: "100%" }} source={{ uri: `${APIbackroundImage}/w1280${data.backdrop_path}` }} />
+                    <View style={styles.absolutePosition}>
+                        <View style={styles.contextOnImage}>
+                            <Text style={styles.afficheTitle}>{data.title ? data.title : data.name}</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            )
+        })
+    }
+
     // the content of the component, will stay in scrolling
     const MainContent = () => {
-        console.log(dataHome.trend.data.length)
-        // console.log(dataHome.showByGenre.data.results.length)
         setMainContentView(
-            <View  key={'home-mainContent-00001'}>
+            <View key={'home-mainContent-00001'}>
 
                 {content.map((list) => {
-                    return (<View>
+                    return (<View key={list.dataName + '0023'}>
                         <Text style={[styles.afficheTitle, styles.paddingTitle]}>{list.title}</Text>
                         <FlatList
 
@@ -189,7 +193,7 @@ const Home = ({ navigation }) => {
     return (
         <View key={'home-screen-00001'}>
             <HeaderMenu menu={{ menu: menu, setMenu: setMenu }} options={[{ value: 'movie', label: 'Film' }, { value: 'tv', label: 'Série' }]} navigation={navigation}
-             key={'home-headerMenu-instance-0000212'}/>
+                key={'home-headerMenu-instance-0000212'} />
             <ScreenSplit TopContent={affiche} MainContent={mainContentView} key={'home-ScreenSplit-instance-0256451'}></ScreenSplit>
         </View>
     )

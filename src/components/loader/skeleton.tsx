@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { StyleSheet, View, Animated, Text, TouchableOpacity, ImageBackground } from 'react-native'
+import { StyleSheet, Animated, ImageBackground, View } from 'react-native'
 import { darkGray } from '../../css/ThemeColor'
 
 
@@ -10,7 +10,8 @@ import { darkGray } from '../../css/ThemeColor'
 
 
 
-const SkeletonLoader = (props: { radius: number, from:number, to:number, duration:number }) => {
+
+const SkeletonLoader = (props: { radius: number, from: number, to: number, duration: number }) => {
 
     const skeleltonLightPosition = new Animated.Value(props.from)
 
@@ -38,9 +39,10 @@ const SkeletonLoader = (props: { radius: number, from:number, to:number, duratio
 
 
     return (
-        <ImageBackground source={require('../../assets/logo.png')} blurRadius={5}  style={[styles.backGround, { borderRadius: props.radius }]} >
-            <Animated.View    style={[styles.bar, { transform: [{ translateX: leftToRight }] }]} />
-        </ImageBackground>
+
+        <View style={[styles.backGround, { borderRadius: props.radius }]} >
+            <Animated.View style={[styles.bar, { transform: [{ translateX: leftToRight }] }]} />
+        </View>
     )
 }
 
@@ -52,14 +54,14 @@ const styles = StyleSheet.create({
         backgroundColor: darkGray,
         width: '100%',
         height: '100%',
-        overflow:'hidden',
+        overflow: 'hidden',
     },
     bar: {
         backgroundColor: 'white',
-        
+
         width: '15%',
         height: '100%',
-        opacity:0.5,
+        opacity: 0.5,
 
     }
 

@@ -149,6 +149,7 @@ android {
 }
 
 dependencies {
+    
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
@@ -158,6 +159,10 @@ dependencies {
     implementation 'com.facebook.fresco:animated-webp:2.0.0'
     implementation 'com.facebook.fresco:webpsupport:2.0.0'
 
+    //splahScreen 
+    implementation project(':react-native-lottie-splash-screen')
+
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.25'
 
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")

@@ -9,20 +9,21 @@ import { NavigationContainer, } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import {
-    MD3LightTheme as DefaultTheme,
-   Provider as PaperProvider } from 'react-native-paper';
+  MD3LightTheme as DefaultTheme,
+  Provider as PaperProvider
+} from 'react-native-paper';
 import Home from './screens/Home';
 import DetailMovie from './screens/DetailMovie';
-import  MaterialIcons from 'react-native-vector-icons/MaterialIcons' 
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { darkGray } from './css/ThemeColor';
-import Start from './screens/Start';
 
-import auth from '@react-native-firebase/auth';
-import { googleConfiguration, googleLogin } from './services/Auth/google';
+import auth from '@react-native-firebase/auth'
+import {  GoogleService } from './services/Auth/google';
 import Connexion from './screens/Connexion';
-import { setUser } from './services/User/user.service';
+import { UserService } from './services/User/user.service';
+import SplashScreen from 'react-native-lottie-splash-screen';
 
-googleConfiguration()
+GoogleService.googleConfiguration()
 
 const Stack = createNativeStackNavigator();
 const theme = {
@@ -47,72 +48,81 @@ const theme = {
     "onError": "#FFFFFF",
     "errorContainer": "#FFDAD6",
     "onErrorContainer": "#410002",
-    
+
   }
 
 };
 
-const App = ()  =>  {
+const App = () => {
+  const [userConnected, setUserConndected]: [any, any] = useState(false)
+  useEffect(() => {
+    SplashScreen.hide(); // here
+  }, []);
 
-  // const [user, setUser] = useState(undefined);
 
   // Handle user state changes
-  async function  onAuthStateChanged(user:any) {
-    await setUser(user)
-    // setUser(usert);
+  async function onAuthStateChanged(user: any) {    
+    user ?  setUserConndected(true) : setUserConndected(false)          
+    await UserService.setUser(user)
   }
 
 
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    
-
-    
+  // const t =  auth().onAuthStateChanged(onAuthStateChanged);
+  auth().onUserChanged(onAuthStateChanged)
+  
   }, [true]);
 
-
-
-    return (
-      <PaperProvider 
+  return (
+    <PaperProvider
       theme={theme}
       settings={{
         icon: props => <MaterialIcons {...props} />,
       }}
-      >
-        <NavigationContainer>
+    >
+      <NavigationContainer>
+        {userConnected ?
           <Stack.Navigator>
-            <Stack.Screen
-              name="Start"
-              component={Start}
-              options={{headerShown:false}}
-            
-            />
-            <Stack.Screen
-              name="Connexion"
-              component={Connexion}
-              options={{headerShown:false}}
-              // initialParams={}
-            />
             <Stack.Screen
               name="Home"
               component={Home}
-              options={{headerShown:false}}
+              options={{ headerShown: false }}
+
 
             />
             <Stack.Screen
               name="DetailMovie"
               component={DetailMovie}
-              options={{headerShown:false}}
+              options={{ headerShown: false }}
 
             />
+            <Stack.Screen
+              name="Connexion"
+              component={Connexion}
+              options={{ headerShown: false }}
+            />
           </Stack.Navigator>
-        </NavigationContainer>
+          :
+          <Stack.Navigator>
+            <Stack.Screen
+              name="Connexion"
+              component={Connexion}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Home"
+              component={Home}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        }
+      </NavigationContainer>
 
-      </PaperProvider>
+    </PaperProvider>
 
-    )
-  }
+  )
+}
 
 
 
